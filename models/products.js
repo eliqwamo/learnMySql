@@ -11,6 +11,7 @@ const Product = database.define(
             primaryKey: true
         },
         productBrand: Sequelize.STRING,
+        productName: Sequelize.STRING,
         productPrice: Sequelize.FLOAT,
         unitInStock: Sequelize.INTEGER,
         productImage: Sequelize.STRING,
