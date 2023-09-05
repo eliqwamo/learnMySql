@@ -8,31 +8,10 @@ import AccountsTable from './models/account.js';
 //CRUD - Create Read Update Delete
 //HTTP Methods - post get put delete
 
-    //OPTION 1
-    // const brand = req.body.productBrand;
-    // const price = req.body.productPrice;
-    // const stock = req.body.unitInStock;
-    // const image = req.body.productImage;
-    // const isPub = req.body.isPublished;
-    // const name = req.body.productName;
-
-    //OPTION 2
-    // const {
-    //     productBrand, 
-    //     productPrice, 
-    //     unitInStock,
-    //     productImage,
-    //     isPublished,
-    //     productName} = req.body;
-
-    //OPTION 3
-
 router.get("/sayHello", (req,res) => {
-
     return res.status(200).json({
         msg: "Hello from API server"
     })
-
 })
 
 
@@ -83,6 +62,79 @@ router.post("/register", (req, res) => {
         })
     })
 })
+
+
+router.post("/verify", (req,res) => {
+    const code = req.body.code;
+    const email = req.body.email;
+    AccountsTable.findAll({where: {email: email}})
+    .then(async results => {
+        if (results.length == 0) {
+            return res.status(401).json({
+                results: 'This email is not exist'
+            })
+        } else {
+            const account = results[0];
+            if(parseInt(code) === parseInt(account.verifyCode)){
+                account.isApproved = true;
+                account.save()
+                return res.status(200).json({
+                    results: account
+                })
+            } else {
+                return res.status(401).json({
+                    results: 'The verify code is not match'
+                })
+            }
+        }
+    })
+    .catch(error => {
+        return res.status(500).json({
+            error: error
+        })
+    })
+
+})
+
+router.post("/login", (req,res) => {
+
+    const password = req.body.password;
+    const email = req.body.email;
+
+    AccountsTable.findAll({where: {email: email}})
+    .then(async results => {
+        if (results.length == 0) {
+            return res.status(401).json({
+                results: 'This email is not exist'
+            })
+        } else {
+            const account = results[0];
+            if(account.isApproved){
+
+                const isMatch = await bcryptjs.compare(password, account.password);
+                if(isMatch){
+                    return res.status(200).json({
+                        results: `Welcome back ${account.firstName}`
+                    })
+                } else {
+                    return res.status(401).json({
+                        results: 'Password not match'
+                    })
+                }
+            } else {
+                return res.status(401).json({
+                    results: 'Your account was not verified yet'
+                })
+            }
+        }
+    })
+    .catch(error => {
+        return res.status(500).json({
+            error: error
+        })
+    })
+})
+
 
 
 function generateRandomIntegerInRange(min, max) {
